@@ -201,7 +201,7 @@ irisjs
 #Abrimos o arquivo iris.json em um bloco de notas e substituimos:
 "sepal_length"
 por:
-"fields": { "sepal_length".
+"fields": { "sepal_length"
 
 #Também substituímos:
 }
