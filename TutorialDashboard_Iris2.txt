@@ -26,6 +26,20 @@ templates
 |-irisjs
 |--index.html
 
+#Dentro do arquivo base_site.html colamos o seguinte código:
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Polls Administration</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+##OBS: este template é fornecido como padrão pelo próprio Django. 
+
+
 
 #Será necessário criar um usuário com senha e email.
 #Ao rodar o server
