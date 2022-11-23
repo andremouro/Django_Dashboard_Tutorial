@@ -110,6 +110,8 @@ class HomeView(View):
 ##Esta classe indica que, quando requisitada, é aberto o arquivo index.html, que está dentro da pasta do nosso app irisjs.
 ##Assim, precisamos definir a página index.html
 
+##referência do código: https://www.geeksforgeeks.org/data-visualization-using-chartjs-and-django/
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 
