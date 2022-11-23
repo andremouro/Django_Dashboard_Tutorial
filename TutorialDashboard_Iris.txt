@@ -1,0 +1,225 @@
+##Para iniciar um novo projeto django, correr a seguinte linha no terminal:
+
+$ django-admin startproject iris #iris é o nome deste projeto
+
+##O projeto é a aplicação web e poderá ser composto por diversos aplicativos que irão executar funções específicas dentro do site.
+
+##Será criada uma pasta com o nome iris dentro da qual haverá uma pasta iris e um arquivo chamado manage.py
+
+iris
+|
+|-__init__.py
+|-asgi.py
+|-settings.py
+|-urls.py
+|-wsgi.py
+
+manage.py
+
+##Para verificar se o projeto foi inicializado com sucesso, correr a seguinte linha no terminal (lembre-se de estar na mesma pasta que o arquivo manage.py):
+
+$ python manage.py runserver
+
+##Acessando o site local http://127.0.0.1:8000/ você deverá observar um foguete e uma mensagem dizendo que o server foi iniciado.
+
+##Agora iremos criar o aplicativo que será responsável pela visualização do dashboard. Primeiro, mudamos o diretório para iris:
+$ cd ./iris
+
+# E corremos a linha no terminal:
+
+$ python manage.py startapp irisjs
+
+##Isto irá criar uma nova pasta dentro de iris, chamada irisjs ( o app responsável pela visualização do dashboard):
+
+irisjs
+|
+|-migrations
+|-__init__.py
+|-admin.py
+|-apps.py
+|-models.py
+|-tests.py
+|-views.py
+
+##Dentro da pasta irisjs, iremos criar uma nova pasta chamada 'templates'. 
+##A pasta templates irá conter os arquivos .html que serão usados para montagem das páginas.
+
+$ cd irisjs
+$ mkdir -p templates
+$ cd templates
+$ mkdir -p irisjs
+$ type nul > index.html
+
+##O arquivo index.html será usado para construir a página em html com o dashboard
+
+##Construído o aplicativo (apesar de ainda não configurado), é necessário conectá-lo ao projeto (aplicação web).
+##Para isso, abrimos o arquivo settings.py dentro da pasta iris, e procuramos a linha com INSTALLED_APPS:
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+##Estes são os apps que já estão conectados quando iniciamos o projeto.
+##Atualizamos esta lista com o irisjs e com o rest_framework (que será usado para a visualização dos dados)
+
+INSTALLED_APPS = [
+    'irisjs',
+    'rest_framework',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+
+
+##Pronto, agora os aplicativos que criamos estão conectados ao aplicativo web
+
+##Agora precisamos adicionar o caminho url que nos levará à página do app.
+##Para isso, abrimos o arquivo urls.py e atualizamos os caminhos de urls
+
+from django.contrib import admin
+from django.urls import path
+from irisjs import views //importar o arquivo views do app irisjs
+  
+urlpatterns = [
+    path('admin/', admin.site.urls), //caminho /admin/ nos levará à página do administrador
+    path('', views.HomeView.as_view()), //homepage da nossa aplicação web. Dentro de views, irá usar a classe HomeView para abrir a página .html (index.html). Essa classe será implementada a seguir
+    #path('api', views.ListIris.as_view()) //api onde serão armazenados nossos dados estruturados para criação dos gráficos. Será definido depois. No momento, deixamos marcada com um # para não haver erros de execução
+]
+
+
+##Por fim, iremos escrever o nosso arquivo views.py, responsável por fornecer uma resposta web para uma requisição web. 
+##Assim, quando a url for acessada, este arquivo será responsável por renderizar a resposta adequada (no caso, o dashboard dentro do index.html)
+##No arquivo views.py, dentro do nosso app irisjs, escrevemos o seguinte código
+
+from django.shortcuts import render
+from django.views.generic import View
+   
+from rest_framework.views import APIView
+from rest_framework.response import Response
+   
+class HomeView(View):						#definimos a classe HomeView que será chamada dentro do urls.py
+    def get(self, request, *args, **kwargs):		#esta classe fará que, quando requisitada (pela homepage da nossa aplicação web) seja renderizado o index.html (que está dentro de irisjs)
+        return render(request, 'irisjs/index.html')
+
+
+
+#################################################
+#################################################
+#################################################
+
+##2 - Criação do banco de dados
+
+#Primeiro definimos o banco de dados que iremos trabalhar. Neste caso usei o banco de dados de iris (https://forge.scilab.org/index.php/p/rdataset/source/tree/master/csv/datasets/iris.csv)
+
+#Agora criamos o banco de dados dentro do Django.
+#Dentro da pasta do nosso app (irisjs), abrimos o arquivo models.py
+
+from django.db import models
+
+class File(models.Model):
+    id = models.CharField(primary_key=True, max_length=6) \\criamos um campo do tipo Caractere que será a primary key, com tamanho máximo 6
+    sepal_length = models.FloatField() \\criamos um campo do tipo Float (permite decimal)
+    sepal_width = models.FloatField()
+    petal_length = models.FloatField()
+    petal_width = models.FloatField()
+    species = models.CharField(max_length=20)
+    def __str__(self):	##Esta linha fará com que as entradas de dados no nosso banco de dados sejam apresentadas pelo 'id'
+        return self.id
+
+
+#Com este código criamos a classe File (nosso banco de dados) e indicamos cada uma de suas 'colunas'. É importante que o nome das colunas seja o mesmo do arquivo .csv baixado
+
+#O próximo passo é conseguir 'povoar' nosso banco de dados do Django com os dados do nosso arquivo csv.
+#O Django aceita apenas dados do tipo 'fixture'. Exemplo: 
+
+
+[
+  {
+    "model": "myapp.person",
+    "pk": 1,
+    "fields": {
+      "first_name": "John",
+      "last_name": "Lennon"
+    }
+  },
+  {
+    "model": "myapp.person",
+    "pk": 2,
+    "fields": {
+      "first_name": "Paul",
+      "last_name": "McCartney"
+    }
+  }
+]
+
+#Assim, no nosso arquivo csv (abrimos no excel), criamos uma coluna chamada 'model' e colocamos o nome irisjs.File (nosso banco de dados dentro do app irisjs)
+#É importante se certificar que a formatação das células estejam corretas
+
+model	id	sepal_length	sepal_width	petal_length	petal_width	species
+irisjs.File	1	5.1	3.5	1.4	0.2	setosa
+irisjs.File	2	4.9	3	1.4	0.2	setosa
+irisjs.File	3	4.7	3.2	1.3	0.2	setosa
+irisjs.File	4	4.6	3.1	1.5	0.2	setosa
+irisjs.File	5	5	3.6	1.4	0.2	setosa
+irisjs.File	6	5.4	3.9	1.7	0.4	setosa
+*Note a primeira coluna adicionada
+
+#No nosso app do Django, criamos uma nova pasta chamada fixtures, onde iremos adicionar o arquivo csv
+irisjs
+|
+|-fixtures \\diretório criado
+|-migrations
+|-templates
+|-__init__.py
+|-admin.py
+|-apps.py
+|-models.py
+|-tests.py
+|-views.py
+
+#Feito isso, convertemos o arquivo csv para json. 
+#Primeiro, certifique-se que haja a separação por ',' e não por ';'.
+
+No terminal (dentro da pasta fixtures) corremos os seguintes códigos
+ $var = import-csv ./iris.csv | ConvertTo-Json
+ $var | Add-Content -Path 'iris.json'    
+
+#Devemos observar o arquivo iris.json criado
+
+#Por fim, formatamos o arquivo json para convertê-lo em um arquivo do tipo fixtures.
+#Abrimos o arquivo iris.json em um bloco de notas e substituimos ""sepal_length"" por ""fields": { "sepal_length"". Também substituímos "}" por "}}"
+#Substituiremos "id" por "pk"
+
+#Agora o arquivo deve estar do tipo fixture:
+[
+    {
+        "model":  "irisjs.File",
+        "pk":  "1",
+        "fields" : { "sepal_length":  "5.1",
+        "sepal_width":  "3.5",
+        "petal_length":  "1.4",
+        "petal_width":  "0.2",
+        "species":  "setosa"
+    }}, ...
+
+#Faremos a leitura do arquivo para nossa database (File). 
+#Primeiro, devemos indicar a 'montagem' do modelo em nossa aplicação.
+#Voltamos, pelo terminal, à pasta inicial do nosso projeto e corremos a seguinte linha:
+
+$ python manage.py makemigrations
+$ python manage.py migrate
+$ python manage.py loaddata iris.json   
+
+#Se tudo deu certo, deve aparecer a seguinte mensagem no terminal:
+Installed 150 object(s) from 1 fixture(s)
+
+##https://www.youtube.com/watch?v=eC95DrKMEo8&t=1s
+

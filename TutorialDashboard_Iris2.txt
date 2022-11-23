@@ -1,0 +1,233 @@
+#############################
+#############################
+#############################
+
+##3- Criação do administrador
+
+#Devemos fazer uma página do administrador que poderá gerenciar o banco de dados manualmente.
+#Primeiro, dentro do arquivo admin.py iremos registrar nosso app
+
+from django.contrib import admin
+from irisjs.models import File
+
+# Register your models here.
+
+admin.site.register(File)
+
+#Podemos agora criar o admin, correndo a seguinte linha no terminal
+$ python manage.py createsuperuser
+
+#Agora precisamo criar o template para que a página do administrador seja carregada.
+#Dentro da pasta templates (dentro do app irisjs), criamos o diretório 'admin'. Dentro deste diretório criamos o arquivo base_site.html, que irá apresentar a página do administrador
+templates
+|
+|-admin
+|--base_site.html
+|-irisjs
+|--index.html
+
+
+#Será necessário criar um usuário com senha e email.
+#Ao rodar o server
+$ python manage.py runserver
+
+#E entrando no path /admin, você poderá logar na conta e encontrará o banco de dados Files. Dentro dele é possível ver todos os dados que foram subidos, além de poder editá-los
+
+#############################
+#############################
+#############################
+
+##4- Criação do API
+
+#Para que possamos plotar os gráficos no dashboard, é necessário criar um API que será armazenado em um path dentro do nosso site.
+#Para isso, podemos usar o REST_framework.
+#Dentro de views.py adicionamos as seguintes linhas de códigos
+
+from django.shortcuts import render, redirect, get_object_or_404, reverse
+from .models import File
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.views.generic import View
+from django.db.models import Avg
+
+class ListIris(APIView):  \\criamos a classe que permitirá a criação da API
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, format=None):  \\definimos o que esta classe irá retornar no API quando for requisitada (a estrutura dos dados)
+        species = [iris.species for iris in File.objects.all()]  \\neste caso, será criada uma variável 'species' em que estarão o nome das espécies de todas as linhas do nosso banco de dados (File)
+        sepalLn = [iris.sepal_length for iris in File.objects.all()] \\ mesma coisa que o anterior, mas para o comprimento da sépala
+        sepalWd = [iris.sepal_width for iris in File.objects.all()]  \\ mesma coisa que o anterior, mas para a largura da sépala
+        speciesUnique = File.objects.values_list('species',flat=True).distinct()  \\neste caso, estamos selecionando apenas os valores únicos de espécies
+        spCount = File.objects.values('species').annotate(average_rating = Avg('sepal_length')).values_list('average_rating',flat=True)
+        spScatter = [{'x':iris.sepal_length, 'y': iris.sepal_width} for iris in File.objects.all()]
+        data = {"species":species,"sepalLn":sepalLn,"sepalWd":sepalWd, 'spUni':speciesUnique, 'spCount':spCount, 'spScatter':spScatter}
+        return Response (data)
+
+#Agora temos os dados estruturados para fazermos os gráficos de barra e scatter plot.
+#Os dados podem ser vistos no caminho /api/. Este caminho foi definido em urls.py. Não se esqueça de retirar a marcação de comentário para o caminho do api
+
+urlpatterns = [
+    path('admin/', admin.site.urls), #caminho /admin/ nos levará à página do administrador
+    path('', views.HomeView.as_view()), #homepage da nossa aplicação web. Dentro de views, irá usar a classe HomeView para abrir a página .html (index.html). Essa classe será implementada a seguir
+    path('api', views.ListIris.as_view()) #api onde serão armazenados nossos dados estruturados para criação dos gráficos. Será definido depois
+]
+
+#########################################
+#########################################
+#########################################
+
+##5 - Montando os gráficos
+
+##Observando nossa HomePage, vemos que ela chama uma classe chamada HomeView.
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api', views.ListIris.as_view()),
+    path('', views.HomeView.as_view()),
+]
+
+##Esta classe está definida em views.py
+
+class HomeView(View):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'irisjs/index.html')
+
+##Esta classe indica que, quando requisitada, é aberto o arquivo index.html, que está dentro da pasta do nosso app irisjs.
+##Assim, precisamos definir a página index.html
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+//Baixar as extensões que serão usadas neste arquivo (bootstrap, jquery)
+<head>
+  <meta charset="utf-8">
+  <title>chatsjs</title>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+
+
+</head>
+
+<body class="container-fluid">
+  <center class="row">
+    <h1>implementation of <b>chartJS</b> using <b>django</b></h1>
+  </center>
+  <hr />
+  <div class="row">
+    <div class="col-md-6">
+      <canvas id="myChartline"></canvas> //Aqui definimos a tela em que será colocado nosso gráfico 'myChartline' definido abaixo
+    </div>
+    <div class="col-md-6">
+      <canvas id="myChartBar"></canvas> //Aqui definimos a tela em que será colocado nosso gráfico 'myChartBar' definido abaixo
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script> //Os gráficos serão feitos com Chart.Js
+
+  <script>
+    var endpoint = '/api'; //definimos o local em que estão armazenados os dados que iremos usar. No caso, /api/
+
+
+    $.ajax({	//Baixamos os dados. Quando os dados forem baixados com sucesso, eles serão armazenados em um objeto chamado 'data' e irá correr as funções drawLineGraph e drawBarGraph, com id = 'myChartline' e 'myChartBar' respectivamente
+      method: "GET",
+      url: endpoint,
+      success: function(data) {
+        drawLineGraph(data, 'myChartline');
+        drawBarGraph(data, 'myChartBar');
+        console.log("drawing");
+      },
+      error: function(error_data) {
+        console.log(error_data);
+      }
+    })
+
+
+    function drawLineGraph(data, id) { //Aqui definimos a função drawLineGraph
+      var labels = data.spUni;	//Os labels serão os nomes das espécies (valores únicos)
+      var chartLabel = "Tamanho da sépala";
+      var sepalLn = data.spCount;	// os valores serão a média do comprimento das sépalas (definido em nosso API)
+      var ctx = document.getElementById(id).getContext('2d');
+      var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'bar',	//definimos o tipo de gráfico.
+
+        // The data for our dataset
+        data: {
+          labels: labels,
+          datasets: [{
+            label: chartLabel,
+            backgroundColor: 'rgb(255, 100, 200)',
+            borderColor: 'rgb(55, 99, 132)',
+            data: sepalLn,
+          }]
+        },
+
+        // Configuration options go here
+        options: {
+          scales: {
+            xAxes: [{
+              display: true
+            }],
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+
+      });
+    }
+
+    function drawBarGraph(data, id) {	//Fazemos a mesma coisa para o gráfico tipo 'scatter'
+      var xyValues = data.spScatter;	//Usamos os dados armazenados em spScatter (definido em nosso API)
+      var ctx = document.getElementById(id).getContext('2d');
+      var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'scatter',	//definimos o tipo de gráfico.
+
+        // The data for our dataset
+        data: {
+          datasets: [{
+            backgroundColor: 'rgb(255, 100, 200)',
+            borderColor: 'rgb(55, 99, 132)',
+            data: xyValues,
+          }]
+        },
+
+        // Configuration options go here
+        options: {
+          scales: {
+            xAxes: [{
+              display: true
+            }],
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+
+      });
+    }
+
+
+
+  </script>
+</body>
+
+</html>
+
+##Pronto, agora podemos abrir o programa:
+$python manage.py runserver
+
+#E veremos os gráficos.

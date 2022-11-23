@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>chatsjs</title>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+
+
+</head>
+
+<body class="container-fluid">
+  <center class="row">
+    <h1>implementation of <b>chartJS</b> using <b>django</b></h1>
+  </center>
+  <hr />
+  <div class="row">
+    <div class="col-md-6">
+      <canvas id="myChartline"></canvas>
+    </div>
+    <div class="col-md-6">
+      <canvas id="myChartBar"></canvas>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+  <script>
+    var endpoint = '/api'; //definimos o local em que estão armazenados os dados que iremos usar. No caso, /api/
+
+
+    $.ajax({	//Baixamos os dados. Quando os dados forem baixados com sucesso, eles serão armazenados em um objeto chamado 'data' e irá correr as funções drawLineGraph e drawBarGraph, com id = 'myChartline' e 'myChartBar' respectivamente
+      method: "GET",
+      url: endpoint,
+      success: function(data) {
+        drawLineGraph(data, 'myChartline');
+        drawBarGraph(data, 'myChartBar');
+        console.log("drawing");
+      },
+      error: function(error_data) {
+        console.log(error_data);
+      }
+    })
+
+
+    function drawLineGraph(data, id) { //Aqui definimos a função drawLineGraph
+      var labels = data.spUni;	//Os labels serão os nomes das espécies (valores únicos)
+      var chartLabel = "Tamanho da sépala";
+      var sepalLn = data.spCount;	// os valores serão a média do comprimento das sépalas (definido em nosso API)
+      var ctx = document.getElementById(id).getContext('2d');
+      var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'bar',	//definimos o tipo de gráfico.
+
+        // The data for our dataset
+        data: {
+          labels: labels,
+          datasets: [{
+            label: chartLabel,
+            backgroundColor: 'rgb(255, 100, 200)',
+            borderColor: 'rgb(55, 99, 132)',
+            data: sepalLn,
+          }]
+        },
+
+        // Configuration options go here
+        options: {
+          scales: {
+            xAxes: [{
+              display: true
+            }],
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+
+      });
+    }
+
+    function drawBarGraph(data, id) {	//Fazemos a mesma coisa para o gráfico tipo 'scatter'
+      var xyValues = data.spScatter;	//Usamos os dados armazenados em spScatter (definido em nosso API)
+      var ctx = document.getElementById(id).getContext('2d');
+      var chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'scatter',	//definimos o tipo de gráfico.
+
+        // The data for our dataset
+        data: {
+          datasets: [{
+            backgroundColor: 'rgb(255, 100, 200)',
+            borderColor: 'rgb(55, 99, 132)',
+            data: xyValues,
+          }]
+        },
+
+        // Configuration options go here
+        options: {
+          scales: {
+            xAxes: [{
+              display: true
+            }],
+            yAxes: [{
+              ticks: {
+                beginAtZero: true
+              }
+            }]
+          }
+        }
+
+      });
+    }
+
+
+
+  </script>
+</body>
+
+</html>
