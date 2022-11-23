@@ -198,8 +198,17 @@ irisjs
 #Devemos observar o arquivo iris.json criado
 
 #Por fim, formatamos o arquivo json para convertê-lo em um arquivo do tipo fixtures.
-#Abrimos o arquivo iris.json em um bloco de notas e substituimos ""sepal_length"" por ""fields": { "sepal_length"". Também substituímos "}" por "}}"
-#Substituiremos "id" por "pk"
+#Abrimos o arquivo iris.json em um bloco de notas e substituimos:
+"sepal_length"
+por:
+"fields": { "sepal_length".
+
+#Também substituímos:
+}
+por:
+}}
+
+#Por fim, substituiremos "id" por "pk"
 
 #Agora o arquivo deve estar do tipo fixture:
 [
