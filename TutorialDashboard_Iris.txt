@@ -109,7 +109,8 @@ class HomeView(View):						#definimos a classe HomeView que será chamada dentro
     def get(self, request, *args, **kwargs):		#esta classe fará que, quando requisitada (pela homepage da nossa aplicação web) seja renderizado o index.html (que está dentro de irisjs)
         return render(request, 'irisjs/index.html')
 
-
+#Para que este código funcione é necessário ter instalado o REST_framework no computador. Caso não tenha instalado, corra a seguinte linha de código no terminal:
+$ pip install djangorestframework
 
 #################################################
 #################################################
@@ -188,7 +189,9 @@ irisjs
 #Feito isso, convertemos o arquivo csv para json. 
 #Primeiro, certifique-se que haja a separação por ',' e não por ';'.
 
-No terminal (dentro da pasta fixtures) corremos os seguintes códigos
+#No terminal (dentro da pasta fixtures) corremos os seguintes códigos
+#Corra os códigos mantendo o '$' e não é necessário correr pelo python (é direto no terminal)
+
  $var = import-csv ./iris.csv | ConvertTo-Json
  $var | Add-Content -Path 'iris.json'    
 
